@@ -1,6 +1,12 @@
 import { useState } from "react"
 import { initializeApp } from "firebase/app"
-import { createUserWithEmailAndPassword, getAuth } from "firebase/auth"
+import {
+  createUserWithEmailAndPassword,
+  getAuth,
+  GoogleAuthProvider,
+  signInWithEmailAndPassword,
+  signInWithPopup,
+} from "firebase/auth"
 
 const firebaseConfig = {
   apiKey: "AIzaSyCv1KE5oGJtLYOHCDfxMgHMXChJ8aL7kME",
@@ -15,11 +21,37 @@ export default function Login({ setIsLoggedIn }) {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
 
-  const handleSignUp = async () => {
+  const connectAuth = () => {
     // connect to our firebase project
     const app = initializeApp(firebaseConfig)
     // connect to Auth
-    const auth = getAuth(app)
+    return getAuth(app)
+  }
+
+  const handlelogin = async () => {
+    const auth = connectAuth()
+    const user = await signInWithEmailAndPassword(auth, email, password).catch(
+      (err) => alert(err.message)
+    )
+    if (user) {
+      console.log(user.user)
+      setIsLoggedIn(true)
+    }
+  }
+
+  const handleGoogleLogin = async ()=>{
+    const auth = await connectAuth()
+    const provider = new GoogleAuthProvider()
+    const user = await signInWithPopup(auth, provider)
+    .catch(err => alert(err.message))
+    if(user){
+        console.log(user.user)
+        setIsLoggedIn(true)
+    }
+  }
+
+  const handleSignUp = async () => {
+    const auth = connectAuth()
     //send email & password to firebase auth
     const user = await createUserWithEmailAndPassword(
       auth,
@@ -28,7 +60,7 @@ export default function Login({ setIsLoggedIn }) {
     ).catch((err) => alert(err.message))
     // if all ok then set
     if (user) {
-        console.log(user)
+      console.log(user)
       setIsLoggedIn(true)
     }
 
@@ -36,7 +68,7 @@ export default function Login({ setIsLoggedIn }) {
     //popup error
   }
   return (
-    <form action="">
+    <form onSubmit={(e) => e.preventDefault()}>
       <label htmlFor="email">
         Email:
         <input
@@ -58,7 +90,10 @@ export default function Login({ setIsLoggedIn }) {
         />
       </label>
       <br />
+      <button onClick={handlelogin}>Login</button>&nbsp;
       <button onClick={handleSignUp}>Sign Up</button>
+      <br />
+      <button onClick={handleGoogleLogin}>Login with Google</button>
     </form>
   )
 }
